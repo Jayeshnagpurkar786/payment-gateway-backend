@@ -44,4 +44,39 @@ const database = require('../models/database')
     }
   }
 
-  module.exports = { paymentMethodHandler };
+  async function getUserData(req, res) {
+    try {
+        const getAllUserData = `
+            SELECT payment_id, amount, order_id, email, contact 
+            FROM rzp_payments 
+            WHERE status = 'captured'
+        `;
+        
+        // Execute the query
+        const existingLogResult = await database.query(getAllUserData);
+
+        // Check if data was found
+        if (existingLogResult.rowCount > 0) {
+            res.status(200).json({
+                success: true,
+                data: existingLogResult.rows
+            });
+        } else {
+            res.status(404).json({
+                success: false,
+                message: 'No captured payments found'
+            });
+        }
+    } catch (error) {
+        console.error('Error fetching user data:', error.message);
+
+        // Respond with an error message and status code
+        res.status(500).json({
+            success: false,
+            message: 'An error occurred while fetching user data',
+            error: error.message
+        });
+    }
+}
+
+module.exports = { paymentMethodHandler, getUserData };
